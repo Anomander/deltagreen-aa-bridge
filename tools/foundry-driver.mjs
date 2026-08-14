@@ -12,6 +12,7 @@
  *   node tools/foundry-driver.mjs probe     # list joinable users
  *   node tools/foundry-driver.mjs capture   # roll for real, dump what the bridge reads
  *   node tools/foundry-driver.mjs smoke     # roll an attack, prove AA took the call
+ *   node tools/foundry-driver.mjs canvas    # borrow an Autorec rule, prove one renders
  *   node tools/foundry-driver.mjs verify    # every check, exits non-zero on failure
  *
  * Environment:
@@ -482,8 +483,152 @@ async function verify() {
         `got ${result.workflows[0]?.targets}`
       );
     }
+
+    console.log('\nCanvas');
+    const canvasResult = await page.evaluate(proveCanvas);
+    if (canvasResult.error) {
+      record('an animation reaches the canvas', false, canvasResult.error);
+    } else {
+      record(
+        'a borrowed Autorec rule matches a Delta Green weapon',
+        canvasResult.workflows[0]?.matchedRule === true
+      );
+      // `started` is the witness, not `effects`: a short melee animation can
+      // finish inside the wait, leaving nothing on the canvas to count.
+      record(
+        'an animation reaches the canvas',
+        canvasResult.started > 0,
+        `${canvasResult.started} started, ${canvasResult.effects} still playing`
+      );
+      record('the borrowed rule is put back', canvasResult.rulesRestored === true);
+    }
   }
   }
+}
+
+/* ------------------------------------------------------------------ canvas */
+
+/**
+ * The last link: prove an animation actually reaches the canvas.
+ *
+ * `smoke` stops at "AA took the call", which is all the bridge is responsible
+ * for. But a world with no Autorec rule for any Delta Green weapon can never
+ * distinguish that from a broken render, so this borrows one: it clones an
+ * existing rule, relabels it after a real weapon on a real token, rolls, and
+ * puts the rule list back.
+ *
+ * Runs in the page.
+ */
+/* c8 ignore start -- executes in the browser */
+function proveCanvas() {
+  return (async () => {
+    const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const KEY = 'aaAutorec-range';
+    const api = globalThis.DeltaGreenAABridge;
+
+    // AA validates rule ids as UUIDv4 and throws while loading its stores if
+    // one is not — which strands the bad rule in the setting, breaking the
+    // menu until it is removed. Clear any leftover before adding one.
+    const current = game.settings.get('autoanimations', KEY);
+    const original = current.filter((rule) => UUID_V4.test(rule.id ?? ''));
+    const removed = current.length - original.length;
+    if (removed) await game.settings.set('autoanimations', KEY, original);
+
+    const donor = original.find((rule) => rule.primary?.video?.animation);
+    if (!donor) return { removed, error: 'No Autorec rule to clone — this world has none configured.' };
+
+    const token = canvas.tokens.placeables.find(
+      (t) => t.actor?.isOwner && t.actor?.items.some((i) => i.type === 'weapon')
+    );
+    if (!token) return { removed, error: 'No ownable token with a weapon on this scene.' };
+
+    const weapon = token.actor.items.find((i) => i.type === 'weapon');
+    const other = canvas.tokens.placeables.find((t) => t.id !== token.id);
+    const restoreTargets = Array.from(game.user.targets).map((t) => t.id);
+
+    let watched = { workflows: [], started: 0 };
+    let effects = 0;
+
+    try {
+      // AA matches `rinsedName.includes(rinseName(rule.label))`, so the whole
+      // weapon name is the safest label — it can only match this weapon.
+      const rule = foundry.utils.deepClone(donor);
+      rule.id = crypto.randomUUID();
+      rule.label = weapon.name;
+      rule.metaData = { ...(rule.metaData ?? {}), default: false };
+      await game.settings.set('autoanimations', KEY, [...original, rule]);
+
+      // AA rebuilds its Autorec stores from the setting's onChange. Rolling
+      // into a half-built store produces no workflow at all — an artifact of
+      // this test, not a defect, and one that cost an afternoon to read.
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      if (other) other.setTarget(true, { releaseOthers: true, groupSelection: false });
+
+      const { createDGRollFromDataset, processDGRoll } = await import('/systems/deltagreen/module/roll/roll.js');
+      const stop = api.observe();
+      const roll = createDGRollFromDataset(
+        { rolltype: 'weapon', key: weapon.system.skill },
+        { actor: token.actor, item: weapon, token: token.document }
+      );
+      await processDGRoll({}, roll);
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+
+      effects = Sequencer.EffectManager.effects.length;
+      watched = stop();
+    } finally {
+      await game.settings.set('autoanimations', KEY, original);
+      if (other) other.setTarget(false, { releaseOthers: false, groupSelection: false });
+      for (const id of restoreTargets) {
+        canvas.tokens.get(id)?.setTarget(true, { releaseOthers: false, groupSelection: false });
+      }
+    }
+
+    return {
+      removed,
+      token: token.name,
+      weapon: weapon.name,
+      workflows: watched.workflows,
+      started: watched.started,
+      effects,
+      rulesRestored: game.settings.get('autoanimations', KEY).length === original.length
+    };
+  })();
+}
+/* c8 ignore stop */
+
+async function canvas() {
+  const { browser, page } = await connect();
+  const info = await requireEnvironment(page);
+
+  if (!info.aa) {
+    console.error('Automated Animations is not active in this world.');
+    await browser.close();
+    process.exit(1);
+  }
+
+  const result = await page.evaluate(proveCanvas);
+  if (result.error) {
+    console.error(result.error);
+    await browser.close();
+    process.exit(1);
+  }
+
+  if (result.removed) {
+    console.log(`Removed ${result.removed} malformed Autorec rule(s) left by an earlier run.\n`);
+  }
+  console.log(`Borrowed an Autorec rule for "${result.weapon}" on ${result.token}, rolled, and put it back.`);
+  console.log(`  AA workflows      : ${result.workflows.length} (matched a rule: ${result.workflows[0]?.matchedRule})`);
+  console.log(`  animations begun  : ${result.started}`);
+  console.log(`  effects on canvas : ${result.effects}`);
+  console.log(`  rules restored    : ${result.rulesRestored}`);
+
+  const ok = result.workflows[0]?.matchedRule === true && result.started > 0;
+  console.log(`\n${ok ? 'An animation reached the canvas.' : 'FAIL: no animation reached the canvas.'}`);
+
+  console.log(`Wrote ${write('canvas.json', result)}`);
+  await browser.close();
+  if (!ok) process.exit(1);
 }
 
 /**
@@ -505,7 +650,7 @@ function setSettings(input) {
 
 /* -------------------------------------------------------------------- main */
 
-const commands = { probe, capture, smoke, verify };
+const commands = { probe, capture, smoke, canvas, verify };
 const command = process.argv[2];
 
 if (!commands[command]) {

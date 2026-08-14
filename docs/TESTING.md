@@ -118,7 +118,8 @@ bridge depends on:
 | `aa.workflow` | The same call as a hook, and the fallback path |
 | `AutomatedAnimations-WorkflowStart` | The driver's witness that the call arrived |
 | `aa.animationStart` | The driver's witness that a sequence reached the canvas |
-| `targets`, `hitTargets`, `playOnMiss` | The options the adapter passes |
+| `hitTargets`, `playOnMiss` | How a hit and a miss are expressed |
+| `allTargets` | Who the animation is aimed at — AA's own name for the `targets` option, pinned instead of `targets` because that appears in any bundle and would pass while proving nothing |
 
 Reading the manifest rather than assuming `dist/autoanimations.js` matters: AA has renamed its
 bundle before, and a snapshot of a file that no longer exists would report every marker missing
@@ -155,6 +156,7 @@ Set `DG_SYSTEM_PATH` or `AA_MODULE_PATH` if either is installed somewhere non-st
 FOUNDRY_USER=Claude npm run fvtt:probe      # list joinable users
 FOUNDRY_USER=Claude npm run fvtt:capture    # roll for real, dump what the bridge reads
 FOUNDRY_USER=Claude npm run fvtt:smoke      # prove AA takes the call, exactly once
+FOUNDRY_USER=Claude npm run fvtt:canvas     # borrow an Autorec rule, prove one renders
 FOUNDRY_USER=Claude npm run fvtt:verify     # every check, non-zero on failure
 HEADED=1 FOUNDRY_USER=Claude npm run fvtt:smoke   # watch it happen
 ```
@@ -190,12 +192,32 @@ chat-message handler for every unsupported system, including this one; it curren
 item in a Delta Green card and does nothing, and this test is what tells us the day that
 changes.
 
+`canvas` closes the last link. `smoke` stops at "AA took the call", which is all the bridge is
+responsible for — but a world with no Autorec rule for any Delta Green weapon cannot tell that
+apart from a broken render. So `canvas` borrows one: it clones an existing rule, relabels it
+after a real weapon on a real token, rolls, asserts `aa.animationStart` fired, and puts the rule
+list back.
+
+Two things learned building it, both preserved as comments in the driver:
+
+- **AA validates Autorec rule ids as UUIDv4 and throws while loading its stores if one is not.**
+  A rule with a Foundry `randomID()` strands itself in the setting and breaks the Autorec menu
+  until removed. `crypto.randomUUID()`, not `foundry.utils.randomID()`. The check clears any
+  malformed leftover before it adds one.
+- **AA rebuilds its Autorec stores from the setting's `onChange`.** Rolling immediately after
+  writing a rule produces *no workflow at all* — which reads exactly like a broken bridge. The
+  check waits for the rebuild.
+
+The witness is `aa.animationStart`, not the count of effects on the canvas: a short melee
+animation finishes inside the wait, leaving nothing to count.
+
 `verify` runs all of it plus the argument-order checks, holding the module's settings at a
 known baseline so the run cannot depend on how the world happens to be configured, and putting
 them back afterwards — including if a check throws. It exits non-zero on any failure.
 
-All three roll in the live world and leave chat messages. None writes to an actor. `smoke` and
-`verify` change the user's targeting and restore it.
+All of them roll in the live world and leave chat messages. **None writes to an actor.** `smoke`,
+`canvas` and `verify` change the user's targeting and restore it; `canvas` and `verify` also add
+and remove one Autorec rule, and `verify` holds this module's own settings at a baseline.
 
 | Variable | Default |
 |---|---|

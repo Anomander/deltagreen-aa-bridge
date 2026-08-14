@@ -11,6 +11,7 @@
     "fvtt:probe": "node tools/foundry-driver.mjs probe",
     "fvtt:capture": "node tools/foundry-driver.mjs capture",
     "fvtt:smoke": "node tools/foundry-driver.mjs smoke",
+    "fvtt:canvas": "node tools/foundry-driver.mjs canvas",
     "fvtt:verify": "node tools/foundry-driver.mjs verify"
   },
   "devDependencies": {

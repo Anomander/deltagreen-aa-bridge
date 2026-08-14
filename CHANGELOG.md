@@ -17,8 +17,22 @@
   `AutomatedAnimations-WorkflowStart` as the witness, so "the bridge failed" and "this world has
   no animation configured" are told apart.
 
-### Not yet verified in a live world
+### Verified in a live world
 
-Everything above is asserted by the test suite and by static extraction from the installed
-`deltagreen` 2.0.1 and `autoanimations` 7.0.22. None of it has been run against a launched
-world yet — `npm run fvtt:verify` is the gate before `0.1.0` is tagged.
+Foundry 14.363, `deltagreen` 2.0.1, `autoanimations` 7.0.22 — `npm run fvtt:verify`, 12/12:
+
+- A weapon roll survives into the chat message with its `rollType`, and **`roll.options.item`
+  carries an `_id` that resolves back to the live Item document** — which is what makes AA's
+  per-item **A-A** button apply. `localizedKey`, `isSuccess` and `isCritical` survive too, so
+  the system's own verdict is used rather than the arithmetic fallback.
+- An attack roll produces **exactly one** AA workflow, carrying the weapon (not a name-only
+  stand-in), the acting token, and the target.
+- An animation reaches the canvas: with an Autorec rule borrowed for a Delta Green weapon,
+  `aa.animationStart` fires and a Sequencer effect renders.
+- Stat rolls are refused; skill rolls are refused while their setting is off.
+
+Added `fvtt:canvas` for that last check, and with it two things AA does not document: Autorec
+rule ids must be UUIDv4 or AA throws while loading its stores and strands the bad rule in the
+setting, and AA rebuilds those stores asynchronously from the setting's `onChange` — rolling
+before the rebuild finishes produces no workflow at all, which reads exactly like a broken
+bridge.

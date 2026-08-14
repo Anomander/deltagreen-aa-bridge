@@ -23,6 +23,7 @@ tests) and [docs/RELEASE.md](docs/RELEASE.md). The invariants below are the enfo
 | `npm run fvtt:probe` | List joinable users in the running world. |
 | `npm run fvtt:capture` | Roll every type live, dump what the bridge reads back. |
 | `npm run fvtt:smoke` | Roll an attack, prove AA took the call exactly once. |
+| `npm run fvtt:canvas` | Borrow an Autorec rule, prove an animation renders. |
 | `npm run fvtt:verify` | Every live check; exits non-zero on failure. |
 
 There is **no build step, no TypeScript, and no linter.** `scripts/**/*.js` is loaded by Foundry
@@ -34,6 +35,7 @@ tooling.
 ```bash
 FOUNDRY_USER=Claude npm run fvtt:capture
 FOUNDRY_USER=Claude npm run fvtt:smoke
+FOUNDRY_USER=Claude npm run fvtt:canvas
 FOUNDRY_USER=Claude npm run fvtt:verify
 HEADED=1 FOUNDRY_USER=Claude npm run fvtt:smoke   # watch it
 ```

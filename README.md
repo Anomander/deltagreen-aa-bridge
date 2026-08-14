@@ -34,7 +34,9 @@ resolves the live token, weapon and targets, and hands them to AA.
 1. Install and enable this module alongside Automated Animations.
 2. Tell AA what to play. Either works, and both are AA's own UI, not this module's:
    - **Per weapon** — open a weapon's item sheet and click the **A-A** (biohazard) header
-     button. AA already offers this on any system; the bridge is what makes it fire.
+     button. AA already offers this on any system; the bridge is what makes it fire. (The
+     weapon resolves back to its live document, which is what makes per-item settings apply —
+     confirmed in a live world, not assumed.)
    - **By name** — an Autorec rule matching the weapon or skill name, in AA's
      **Automatic Recognition Menu**.
 3. Target something and roll an attack from the character sheet.
@@ -115,6 +117,7 @@ npm run sync:rolltypes                      # re-extract the system's roll vocab
 npm run sync:aa                             # re-extract the Automated Animations contract
 FOUNDRY_USER=Claude npm run fvtt:capture    # roll in a live world, dump what the bridge reads
 FOUNDRY_USER=Claude npm run fvtt:smoke      # prove AA takes the call, exactly once
+FOUNDRY_USER=Claude npm run fvtt:canvas     # borrow an Autorec rule, prove one renders
 FOUNDRY_USER=Claude npm run fvtt:verify     # every live check, non-zero on failure
 ```
 
