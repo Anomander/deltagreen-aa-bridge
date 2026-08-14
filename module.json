@@ -1,0 +1,62 @@
+{
+  "id": "deltagreen-aa-bridge",
+  "title": "Delta Green — Automated Animations Bridge",
+  "description": "Teaches Automated Animations to read Delta Green rolls. The deltagreen system fires no roll hook and its chat cards carry no item id, so Automated Animations' generic handler finds nothing to animate; this bridge reads the roll itself and hands AA the token, the weapon and the targets — with hit and miss taken from the system's own verdict.",
+  "version": "0.1.0",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "14",
+    "maximum": "14"
+  },
+  "authors": [
+    {
+      "name": "Anomander",
+      "url": "https://github.com/Anomander",
+      "github": "Anomander"
+    }
+  ],
+  "esmodules": ["scripts/bridge.js"],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "deltagreen",
+        "type": "system",
+        "manifest": "https://raw.githubusercontent.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/main/system.json",
+        "compatibility": {
+          "minimum": "2.0.0"
+        }
+      }
+    ],
+    "requires": [
+      {
+        "id": "autoanimations",
+        "type": "module",
+        "manifest": "https://github.com/theripper93/autoanimations/releases/latest/download/module.json",
+        "compatibility": {
+          "minimum": "7.0.0"
+        }
+      }
+    ],
+    "recommends": [
+      {
+        "id": "JB2A_DnD5e",
+        "type": "module",
+        "reason": "The animation library Automated Animations' presets are built from."
+      }
+    ]
+  },
+  "socket": false,
+  "url": "https://github.com/Anomander/deltagreen-aa-bridge",
+  "manifest": "https://github.com/Anomander/deltagreen-aa-bridge/releases/latest/download/module.json",
+  "download": "https://github.com/Anomander/deltagreen-aa-bridge/releases/latest/download/module.zip",
+  "license": "LICENSE",
+  "readme": "https://github.com/Anomander/deltagreen-aa-bridge#readme",
+  "bugs": "https://github.com/Anomander/deltagreen-aa-bridge/issues"
+}

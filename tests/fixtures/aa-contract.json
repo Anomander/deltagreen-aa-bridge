@@ -1,0 +1,16 @@
+{
+  "module": {
+    "id": "autoanimations",
+    "version": "7.0.22"
+  },
+  "markers": {
+    "window.AutomatedAnimations": true,
+    "playAnimation": true,
+    "aa.workflow": true,
+    "AutomatedAnimations-WorkflowStart": true,
+    "aa.animationStart": true,
+    "hitTargets": true,
+    "playOnMiss": true,
+    "allTargets": true
+  }
+}

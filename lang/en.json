@@ -1,0 +1,24 @@
+{
+  "DGAA.Settings.enabled.Name": "Enable the bridge",
+  "DGAA.Settings.enabled.Hint": "Turn off to stop feeding rolls to Automated Animations without disabling either module.",
+
+  "DGAA.Settings.animateAttacks.Name": "Animate attack rolls",
+  "DGAA.Settings.animateAttacks.Hint": "Play an animation when an Agent rolls to hit with a weapon. The weapon's own Automated Animations settings, or an Autorec rule matching its name, decide what plays.",
+
+  "DGAA.Settings.animateDamage.Name": "Animate damage rolls",
+  "DGAA.Settings.animateDamage.Hint": "Also animate the damage roll that follows an attack. Off by default: with both on, one attack plays two animations.",
+
+  "DGAA.Settings.animateSkills.Name": "Animate skill rolls",
+  "DGAA.Settings.animateSkills.Hint": "Play an animation on skill and special training rolls. Needs an Autorec rule named after the skill; nothing plays otherwise.",
+
+  "DGAA.Settings.animateSanity.Name": "Animate SAN rolls",
+  "DGAA.Settings.animateSanity.Hint": "Play an animation on Sanity checks and Sanity damage. Needs an Autorec rule named after the check.",
+
+  "DGAA.Settings.playOnMiss.Name": "Animate misses",
+  "DGAA.Settings.playOnMiss.Hint": "On a failed attack roll, play Automated Animations' miss animation — the shot goes past the target rather than into it. Turn off to show nothing on a miss.",
+
+  "DGAA.Settings.debug.Name": "Log every roll",
+  "DGAA.Settings.debug.Hint": "Print each roll to the console with what the bridge read from it and why it did or did not animate. The first thing to turn on when an animation does not play.",
+
+  "DGAA.Notifications.AAMissing": "Delta Green — Automated Animations Bridge: Automated Animations is not active, so nothing will animate."
+}

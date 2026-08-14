@@ -1,0 +1,20 @@
+{
+  "name": "deltagreen-aa-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "sync:rolltypes": "node tools/sync-rolltypes.mjs",
+    "sync:aa": "node tools/sync-aa-contract.mjs",
+    "fvtt:probe": "node tools/foundry-driver.mjs probe",
+    "fvtt:capture": "node tools/foundry-driver.mjs capture",
+    "fvtt:smoke": "node tools/foundry-driver.mjs smoke",
+    "fvtt:verify": "node tools/foundry-driver.mjs verify"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1",
+    "vitest": "^3.2.0"
+  }
+}
