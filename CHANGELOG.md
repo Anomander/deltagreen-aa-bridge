@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.0.1
 
 - Initial implementation.
 - Reads `roll.options` out of Delta Green chat messages — the system fires no roll hook and its

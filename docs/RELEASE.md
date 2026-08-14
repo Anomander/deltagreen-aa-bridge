@@ -2,9 +2,14 @@
 
 ## The shape of it
 
-Releases are tag-driven. Pushing `v<version>` runs `.github/workflows/release.yml`, which
-tests, stamps the manifest, builds `module.zip`, publishes a GitHub release, and — if a
-`FOUNDRY_API_TOKEN` secret exists — registers the version with the Foundry package registry.
+Releases are tag-driven. Pushing `release-<version>` **or** `v<version>` runs
+`.github/workflows/release.yml`, which tests, stamps the manifest, builds `module.zip`,
+publishes a GitHub release, and — if a `FOUNDRY_API_TOKEN` secret exists — registers the version
+with the Foundry package registry.
+
+Both prefixes work on purpose: `delta-green-combat-hud` releases on `release-*` and
+`deltagreen-automations` on `v*`, and a tag matching neither runs **nothing** — no workflow, no
+failure, no notification. That is how this repo's first release was silently skipped.
 
 There is **no build step**. The module is plain ES modules that Foundry loads straight from the
 tree, so the zip is the tree minus its tooling: `module.json`, `LICENSE`, `README.md`,
@@ -32,17 +37,28 @@ tree, so the zip is the tree minus its tooling: `module.json`, `LICENSE`, `READM
 
 ```bash
 git commit -am "Release 0.2.0"
-git tag v0.2.0
+git tag release-0.2.0
 git push && git push --tags
 ```
 
-The tag is the version, prefixed with `v`. `v0.2.0` releases `0.2.0`.
+The tag is the version, prefixed with `release-` or `v`. Both `release-0.2.0` and `v0.2.0`
+release `0.2.0`; the prefix is stripped, and a tag with neither fails the run loudly rather than
+being ignored.
+
+If a tag was pushed before the version was right, move it rather than adding a second:
+
+```bash
+git tag -d release-0.2.0
+git push origin :refs/tags/release-0.2.0
+git tag release-0.2.0 && git push --tags
+```
 
 ## What the workflow guarantees
 
 | Step | Failure it prevents |
 |---|---|
 | `npm test` | A release that was already broken on `main`. |
+| Tag prefix check | A tag nobody reacts to. An unmatched prefix now fails the run instead of skipping it. |
 | Tag/manifest version check | A release whose manifest advertises a different version than the tag it came from. |
 | Manifest-path check against the zip | A module that installs and then 404s at load — a path declared in `module.json` and left out of the archive. Invisible to every other test. |
 | `variable-substitution` on `module.json` | Hand-edited download URLs that point at the previous release. |

@@ -66,3 +66,33 @@ describe('release packaging', () => {
     expect(zipLine).not.toContain('tests');
   });
 });
+
+describe('release trigger', () => {
+  const workflow = fs.readFileSync('.github/workflows/release.yml', 'utf8');
+  const release = fs.readFileSync('docs/RELEASE.md', 'utf8');
+
+  // The first release of this repo was tagged `release-0.0.1` against a
+  // workflow listening only for `v*`. Nothing ran, nothing failed, and no
+  // error appeared anywhere — the release simply did not exist. Both sibling
+  // modules are cited in the workflow for why both prefixes are accepted.
+  it.each(['v*', 'release-*'])('fires on %s tags', (pattern) => {
+    expect(workflow).toContain(`- "${pattern}"`);
+  });
+
+  it('derives a version from either prefix', () => {
+    expect(workflow).toContain('${GITHUB_REF_NAME#release-}');
+    expect(workflow).toContain('${GITHUB_REF_NAME#v}');
+  });
+
+  it('documents a tag form the workflow actually listens for', () => {
+    // A RELEASE.md that tells you to push a tag nothing reacts to is how this
+    // failed the first time.
+    // Skip flags, so the `git tag -d <tag>` cleanup example reads as its tag.
+    const documented = [...release.matchAll(/git tag (?:-\w+\s+)*(\S+)/g)].map((m) => m[1]);
+    expect(documented.length).toBeGreaterThan(0);
+
+    for (const tag of documented) {
+      expect(tag, `RELEASE.md says "git tag ${tag}"`).toMatch(/^(v|release-)/);
+    }
+  });
+});

@@ -2,7 +2,7 @@
   "id": "deltagreen-aa-bridge",
   "title": "Delta Green — Automated Animations Bridge",
   "description": "Teaches Automated Animations to read Delta Green rolls. The deltagreen system fires no roll hook and its chat cards carry no item id, so Automated Animations' generic handler finds nothing to animate; this bridge reads the roll itself and hands AA the token, the weapon and the targets — with hit and miss taken from the system's own verdict.",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "compatibility": {
     "minimum": "13",
     "verified": "14",

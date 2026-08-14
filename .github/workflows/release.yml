@@ -3,7 +3,13 @@ name: Release Module
 on:
   push:
     tags:
+      # Both conventions, because the sibling modules disagree:
+      # delta-green-combat-hud releases on `release-*`, deltagreen-automations
+      # on `v*`. A tag that matches neither runs nothing at all and reports no
+      # failure anywhere — which is exactly how the first release of this repo
+      # was silently skipped.
       - "v*"
+      - "release-*"
 
 permissions:
   contents: write
@@ -25,9 +31,23 @@ jobs:
           npm install
           npm test
 
+      # The trigger above is deliberately loose and this is deliberately strict.
+      # A loose trigger means a near-miss tag still starts a run and reports
+      # something; a strict parse means it cannot quietly release nonsense.
+      # `v*` alone would accept `version-1.0` and derive `ersion-1.0` from it.
       - name: Derive version from tag
         id: version
-        run: echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: |
+          case "$GITHUB_REF_NAME" in
+            release-[0-9]*) VERSION="${GITHUB_REF_NAME#release-}" ;;
+            v[0-9]*)        VERSION="${GITHUB_REF_NAME#v}" ;;
+            *)
+              echo "::error::Tag '$GITHUB_REF_NAME' is not a release tag. Expected release-<version> or v<version>, e.g. release-0.0.1"
+              exit 1
+              ;;
+          esac
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Releasing version $VERSION from tag $GITHUB_REF_NAME"
 
       - name: Verify the tag matches the manifest
         run: |
